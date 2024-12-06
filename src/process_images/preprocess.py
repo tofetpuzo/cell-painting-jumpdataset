@@ -132,11 +132,11 @@ class TiffProcessor:
 
             # Map input channels to output channels in desired order: DNA, ER, RNA, AGP, Mito
             channel_mapping = {
-                5: 0,  # DNA -> channel 1
-                4: 1,  # ER -> channel 2
-                3: 2,  # RNA -> channel 3
-                2: 3,  # AGP -> channel 4
-                1: 4,  # Mito -> channel 5
+                5: 0,  # DNA -> channel 0
+                4: 1,  # ER -> channel 1
+                3: 2,  # RNA -> channel 2
+                2: 3,  # AGP -> channel 3
+                1: 4,  # Mito -> channel 4
             }
 
             # Populate the array with provided channels in the desired order
