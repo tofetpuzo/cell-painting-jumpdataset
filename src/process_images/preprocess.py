@@ -1,4 +1,8 @@
-"""Create numpy arrays from TIFF files"""
+"""
+This script preprocesses TIFF files and creates tiles from them.
+It loads different channels from TIFF files, normalizes and resizes them, and creates tiles from the composite image.
+The resulting tiles are saved in a specified directory."""
+
 import logging
 import re
 from skimage.transform import resize
@@ -7,7 +11,8 @@ import numpy as np
 from PIL import Image
 import gzip
 
-from create_tiles import CreateTiles
+from src.process_images.create_tiles import CreateTiles
+import argparse
 
 
 # Set up logging
@@ -16,24 +21,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[logging.FileHandler("log_error.log"), logging.StreamHandler()],
 )
-
-
-file_mappings = [
-    {
-        "filename": "r01c02f01p01-ch5sk1fk1fl1.tiff",
-        "regex": r"r\d{2}c\d{2}f\d{2}p\d{2}-ch(\d+)sk\d+fk\d+fl\d+\.tiff",
-        "match_channel": r"-ch(\d+)",
-        "prefix": r"r\d{2}c\d{2}f\d{2}p\d{2}",
-        "OrigER": 1,
-        "OrigRNA": 2,
-        "OrigDNA": 4,
-        "OrigAGP": 5,
-        "OrigMito": 3,
-        "source_folder": 1,
-    },
-]
-
-# Utility functions
 
 
 class TiffProcessor:
@@ -59,8 +46,7 @@ class TiffProcessor:
         channel_images = {}
         try:
             for file_in_group in group_matching_files_in_five:
-                channel_number = re.search(
-                    mapping.get("match_channel"), file_in_group)
+                channel_number = re.search(mapping.get("match_channel"), file_in_group)
                 if channel_number is None:
                     continue  # Skip
                 channel_number = int(channel_number.group(1))
@@ -117,8 +103,9 @@ class TiffProcessor:
 
             # Resize the image to (1080, 1080) if it's not already that size
             if normalized.shape[:2] != (1080, 1080):
-                normalized = resize(normalized, (1080, 1080),
-                                    preserve_range=True).astype(np.uint8)
+                normalized = resize(
+                    normalized, (1080, 1080), preserve_range=True
+                ).astype(np.uint8)
 
             return normalized
         except Exception as e:
@@ -143,8 +130,7 @@ class TiffProcessor:
             # 1280 × 1080
 
             # Initialize a zero array for the composite image with 6 channels
-            composite_image = np.zeros(
-                (*image_shape, num_channels), dtype=np.uint8)
+            composite_image = np.zeros((*image_shape, num_channels), dtype=np.uint8)
 
             # Map input channels to output channels in desired order: DNA, ER, RNA, AGP, Mito
             channel_mapping = {
@@ -158,60 +144,8 @@ class TiffProcessor:
             # Populate the array with provided channels in the desired order
             for input_channel, output_idx in channel_mapping.items():
                 composite_image[..., output_idx] = channel_images.get(
-                    input_channel, np.zeros(image_shape, dtype=np.uint8))
+                    input_channel, np.zeros(image_shape, dtype=np.uint8)
+                )
             return composite_image
         except Exception as e:
             logging.error(f"Error in create_6_channel_array: {e}")
-
-
-def main():
-    # Directory containing TIFF files
-    source_directory = "C:\plot_neural\cell-painting-jumpdataset\sample_images"
-    tile_output_dir = "tiles_output"  # Directory to save tiles
-    tile_size = 128
-    overlap = 0.5
-
-    # Instantiate the TiffProcessor
-    processor = TiffProcessor(directory=source_directory)
-
-    # Traverse the directory and process TIFF files
-    for mapping in file_mappings:
-        # Gather all TIFF files matching the regex in the source directory
-        all_files = [
-            os.path.join(source_directory, f)
-            for f in os.listdir(source_directory)
-            if re.search(mapping["regex"], f)
-        ]
-
-        # Group files by prefix (assuming prefix is unique per group)
-        grouped_files = {}
-        for file in all_files:
-            prefix = re.search(mapping["prefix"], file).group()
-            if prefix not in grouped_files:
-                grouped_files[prefix] = []
-            grouped_files[prefix].append(file)
-
-        # Process each group of matching files
-        for prefix, group_files in grouped_files.items():
-            logging.info(f"Processing group: {prefix}")
-            try:
-                # Create a composite array
-                composite_array = processor.load_channels(group_files, mapping)
-
-                if composite_array is None:
-                    logging.warning(
-                        f"Failed to create composite for group {prefix}")
-                    continue
-
-                # Create tiles from the composite
-                output_dir = os.path.join(tile_output_dir, prefix)
-                CreateTiles.create_tiles(
-                    composite=composite_array,
-                    tile_dir=output_dir,
-                )
-            except Exception as e:
-                logging.error(f"Error processing group {prefix}: {e}")
-
-
-if __name__ == "__main__":
-    main()
