@@ -32,9 +32,9 @@ class CreateTiles:
         height, width, _ = composite.shape
         os.makedirs(tile_dir, exist_ok=True)
 
-        # Calculate grid dimensions based on num_tiles
-        grid_rows = int(np.ceil(np.sqrt(num_tiles)))
-        grid_cols = int(np.ceil(num_tiles / grid_rows))
+        # Calculate grid dimensions for 1 tiles (3x5 grid)
+        grid_rows = 4
+        grid_cols = 4
 
         # Calculate tile dimensions
         tile_size_x = width // grid_cols
@@ -68,13 +68,12 @@ class CreateTiles:
                 tile_filename = f"tile_{tile_number:04d}.parquet"
                 tile_path = os.path.join(tile_dir, tile_filename)
 
-                # Store the original shape information
-                tile_info = {
-                    'data': tile.reshape(-1),  # Flatten completely to 1D
-                    'original_shape': list(tile.shape),  # Store original shape
-                }
-                tile_df = pd.DataFrame(tile_info)
-                tile_df.to_parquet(tile_path, compression="gzip")
+                reshaped_tile = tile.reshape(-1, tile.shape[-1])
+                reshaped_tile_df = pd.DataFrame(
+                    reshaped_tile,
+                    columns=[f"feature_{k}" for k in range(tile.shape[-1])],
+                )
+                reshaped_tile_df.to_parquet(tile_path, compression="gzip")
 
                 tile_number += 1
 
