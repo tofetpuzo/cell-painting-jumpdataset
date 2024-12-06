@@ -32,9 +32,9 @@ class CreateTiles:
         height, width, _ = composite.shape
         os.makedirs(tile_dir, exist_ok=True)
 
-        # Calculate grid dimensions for 16 tiles (4x4 grid)
-        grid_rows = 4
-        grid_cols = 4
+        # Calculate grid dimensions based on num_tiles
+        grid_rows = int(np.ceil(np.sqrt(num_tiles)))
+        grid_cols = int(np.ceil(num_tiles / grid_rows))
 
         # Calculate tile dimensions
         tile_size_x = width // grid_cols
