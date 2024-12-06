@@ -70,13 +70,15 @@ class CreateTiles:
 
                 # Ensure we're using exactly 5 channels
                 if tile.shape[-1] != 5:
-                    logging.warning(f"Expected 5 channels, got {tile.shape[-1]}. Adjusting...")
+                    logging.warning(
+                        f"Expected 5 channels, got {tile.shape[-1]}. Adjusting..."
+                    )
                     if tile.shape[-1] > 5:
                         tile = tile[..., :5]  # Take first 5 channels
                     else:
                         # Pad with zeros if less than 5 channels
                         padded = np.zeros((128, 128, 5), dtype=tile.dtype)
-                        padded[..., :tile.shape[-1]] = tile
+                        padded[..., : tile.shape[-1]] = tile
                         tile = padded
 
                 # Reshape to 2D array (pixels x channels)

@@ -63,7 +63,7 @@ class TiffProcessor:
                     img_array = TiffProcessor.normalize_tiff(img_array)
                     channel_images[channel_number] = img_array
 
-            return TiffProcessor.create_6_channel_array(channel_images)
+            return TiffProcessor.create_6_channel_array(channel_images, mapping)
         except Exception as e:
             logging.error(f"Error in load_channels: {e}")
 
@@ -111,7 +111,7 @@ class TiffProcessor:
             return None
 
     @staticmethod
-    def create_6_channel_array(channel_images: dict) -> np.ndarray:
+    def create_6_channel_array(channel_images: dict, mapping: dict) -> np.ndarray:
         """
         Create a 6-channel array from the provided channel images.
 
@@ -132,11 +132,11 @@ class TiffProcessor:
 
             # Map input channels to output channels in desired order: DNA, ER, RNA, AGP, Mito
             channel_mapping = {
-                5: 0,  # DNA -> channel 0
-                4: 1,  # ER -> channel 1
-                3: 2,  # RNA -> channel 2
-                2: 3,  # AGP -> channel 3
-                1: 4,  # Mito -> channel 4
+                mapping["OrigDNA"]: 0,
+                mapping["OrigER"]: 1,
+                mapping["OrigRNA"]: 2,
+                mapping["OrigAGP"]: 3,
+                mapping["OrigMito"]: 4,
             }
 
             # Populate the array with provided channels in the desired order
