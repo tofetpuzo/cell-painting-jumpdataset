@@ -32,7 +32,7 @@ class CreateTiles:
         height, width, _ = composite.shape
         os.makedirs(tile_dir, exist_ok=True)
 
-        # Calculate grid dimensions for 1 tiles (3x5 grid)
+        # Calculate grid dimensions for 1 tiles (4 X 4 grid) - 16 tiles
         grid_rows = 4
         grid_cols = 4
 
@@ -59,10 +59,11 @@ class CreateTiles:
                     break
 
                 # Extract the tile
-                tile = composite[i : i + tile_size, j : j + tile_size, :]
+                tile = composite[i: i + tile_size, j: j + tile_size, :]
 
                 # Optionally resize tile to fixed size (128x128)
-                tile = cv2.resize(tile, (128, 128), interpolation=cv2.INTER_CUBIC)
+                tile = cv2.resize(tile, (128, 128),
+                                  interpolation=cv2.INTER_CUBIC)
 
                 # Save tile as parquet
                 tile_filename = f"tile_{tile_number:04d}.parquet"
