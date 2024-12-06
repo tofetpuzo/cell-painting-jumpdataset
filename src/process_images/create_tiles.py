@@ -68,11 +68,22 @@ class CreateTiles:
                 tile_filename = f"tile_{tile_number:04d}.parquet"
                 tile_path = os.path.join(tile_dir, tile_filename)
 
-                # Reshape to 2D array where each row represents a pixel with its channels
-                reshaped_tile = tile.reshape(128 * 128, tile.shape[-1])
+                # Ensure we're using exactly 5 channels
+                if tile.shape[-1] != 5:
+                    logging.warning(f"Expected 5 channels, got {tile.shape[-1]}. Adjusting...")
+                    if tile.shape[-1] > 5:
+                        tile = tile[..., :5]  # Take first 5 channels
+                    else:
+                        # Pad with zeros if less than 5 channels
+                        padded = np.zeros((128, 128, 5), dtype=tile.dtype)
+                        padded[..., :tile.shape[-1]] = tile
+                        tile = padded
+
+                # Reshape to 2D array (pixels x channels)
+                reshaped_tile = tile.reshape(128 * 128, 5)
                 reshaped_tile_df = pd.DataFrame(
                     reshaped_tile,
-                    columns=[f"feature_{k}" for k in range(tile.shape[-1])],
+                    columns=[f"feature_{k}" for k in range(5)],
                 )
                 reshaped_tile_df.to_parquet(tile_path, compression="gzip")
 
