@@ -61,14 +61,15 @@ class CreateTiles:
                 # Extract the tile
                 tile = composite[i : i + tile_size, j : j + tile_size, :]
 
-                # Optionally resize tile to fixed size (e.g., 128x128)
+                # Optionally resize tile to fixed size (128x128)
                 tile = cv2.resize(tile, (128, 128), interpolation=cv2.INTER_CUBIC)
 
                 # Save tile as parquet
                 tile_filename = f"tile_{tile_number:04d}.parquet"
                 tile_path = os.path.join(tile_dir, tile_filename)
 
-                reshaped_tile = tile.reshape(-1, tile.shape[-1])
+                # Reshape to 2D array where each row represents a pixel with its channels
+                reshaped_tile = tile.reshape(128 * 128, tile.shape[-1])
                 reshaped_tile_df = pd.DataFrame(
                     reshaped_tile,
                     columns=[f"feature_{k}" for k in range(tile.shape[-1])],
