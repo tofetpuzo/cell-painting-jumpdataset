@@ -1,0 +1,45 @@
+from tissue_vae import preprocess_images, generate_embeddings, aggregate_embeddings
+
+# Preprocess images
+# Note that all processed images must have the correct stain order
+stain_mapping = {
+    'OrigDNA': 0,
+    'OrigEr': 1,
+    'OrigRNA': 2,
+    'OrigAGP': 3,
+    'OrigMito': 4
+}
+# This function needs to be able to take in .tiffs and output prepared tiles
+preprocess_images('raw_images/', 'processed_tiles/', stain_mapping)
+
+# tiff files -> normalisation -> parquet files
+# source folders, destination folders.
+
+# Generate embeddings
+# This function instantiates the model and generate the embeddings
+# There are a number of different arguments that include additional information with the embeddings
+results = generate_embeddings(
+    'processed_tiles/',
+    batch_size=64,
+    return_reconstruction=True,
+    return_reconstruction_error=True
+)
+
+# checkpoints which weights 
+
+
+# Access results
+embeddings = results['embeddings']
+reconstructions = results['reconstructions']
+errors = results['reconstruction_error']
+
+# Aggregate embeddings
+# This function needs to aggregate the embeddings from multiple tiles to a single embedding that
+# represents the original set of combined well tiffs
+aggregated = aggregate_embeddings(embeddings, file_reference, method='avg')
+
+# 3 * 3
+[[1, 3, 4], [3, 4, 6], [6, 7, 7]]
+
+#sum them on the 
+# 
