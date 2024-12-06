@@ -6,13 +6,11 @@ The resulting tiles are saved in a specified directory."""
 import logging
 import re
 from skimage.transform import resize
-import os
 import numpy as np
 from PIL import Image
-import gzip
+
 
 from src.process_images.create_tiles import CreateTiles
-import argparse
 
 
 # Set up logging
@@ -81,33 +79,30 @@ class TiffProcessor:
         np.ndarray: The normalized and resized image array.
         """
         try:
-            if img_array is None or img_array.size == 0:
-                logging.error("Empty or None image array received")
-                return np.zeros((1080, 1080), dtype=np.uint8)
-
-            # Ensure 2D array
-            if len(img_array.shape) > 2:
-                img_array = img_array[:, :, 0]  # Take first channel if multi-channel
-            
             # Find the minimum and maximum pixel values in the image
             min_val = np.min(img_array)
             max_val = np.max(img_array)
 
             if min_val == max_val:
-                logging.warning("Image has constant values, returning zero array")
-                return np.zeros((1080, 1080), dtype=np.uint8)
+                # If min and max are the same, the image is constant (all pixels have the same value)
+                # In this case, normalization would cause division by zero, so we return a zero array instead
+                normalized = np.zeros_like(img_array, dtype=np.uint8)
+            else:
+                # Normalize the image to the range [0, 1]
+                # This is done by subtracting the minimum value and then dividing by the range
+                normalized = (img_array - min_val) / (max_val - min_val)
 
-            # Normalize the image to the range [0, 1]
-            normalized = (img_array - min_val) / (max_val - min_val)
-            normalized = np.clip(normalized, 0, 1)
-            normalized = (normalized * 255).astype(np.uint8)
+                # Clip values to ensure they're in the range [0, 1]
+                # This handles any potential floating point errors
+                normalized = np.clip(normalized, 0, 1)
 
-            # Resize the image to (1080, 1080)
-            if normalized.shape != (1080, 1080):
-                logging.info(f"Resizing image from {normalized.shape} to (1080, 1080)")
+                # Scale the normalized values to the range [0, 255] and convert to 8-bit unsigned integer
+                normalized = (normalized * 255).astype(np.uint8)
+
+            # Resize the image to (1080, 1080) if it's not already that size
+            if normalized.shape[:2] != (1080, 1080):
                 normalized = resize(
-                    normalized, (1080, 1080), preserve_range=True, 
-                    anti_aliasing=True, order=1
+                    normalized, (1080, 1080), preserve_range=True
                 ).astype(np.uint8)
 
             return normalized
@@ -128,7 +123,7 @@ class TiffProcessor:
         """
         # Assume the image dimensions are 1080x1080
         try:
-            num_channels = 6
+            num_channels = 5
             image_shape = (1080, 1080)
             # 1280 × 1080
 
@@ -139,7 +134,7 @@ class TiffProcessor:
             channel_mapping = {
                 5: 0,  # DNA -> channel 1
                 4: 1,  # ER -> channel 2
-                6: 2,  # RNA -> channel 3
+                3: 2,  # RNA -> channel 3
                 2: 3,  # AGP -> channel 4
                 1: 4,  # Mito -> channel 5
             }
