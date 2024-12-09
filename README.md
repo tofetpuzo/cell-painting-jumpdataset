@@ -10,7 +10,7 @@ A Python library for processing multi-channel TIFF images, creating tiles, and g
   - Creates tiles from composite images
   - Generates embeddings using VAE model
 
-### Source Code (`src/`)
+### Source Code directory (`src/`)
 
 #### Image Processing (`src/process_images/`)
 - `preprocess.py` - Handles TIFF file preprocessing:
