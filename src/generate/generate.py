@@ -3,8 +3,9 @@ import torch
 import numpy as np
 from pathlib import Path
 from torch.utils.data import DataLoader
-from .model import VAE
-from .dataset import TiledDataset
+from src.generate.weights.model import VAE
+from src.load_dataset.dataset import TiledDataset
+import os
 
 
 def generate_embeddings(
@@ -35,7 +36,10 @@ def generate_embeddings(
 
     # Load model
     model = VAE().to(device)
+
+    # find the full path traverse the directory
     model_path = Path(__file__).parent / "weights" / "model_weights.pth"
+
     if not model_path.exists():
         raise FileNotFoundError("Model weights not found. Please download them first.")
 
@@ -75,5 +79,12 @@ def generate_embeddings(
 
     if return_reconstruction_error:
         results["reconstruction_error"] = np.concatenate(reconstruction_errors, axis=0)
+
+    # write the embeddings to a file
+
+    embeddings_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "embeddings.npy"
+    )
+    np.save(embeddings_path, results["embeddings"])
 
     return results

@@ -10,6 +10,7 @@ import re
 import logging
 
 from src.process_images.preprocess import TiffProcessor
+from src.generate.generate import generate_embeddings
 
 
 # Set up logging
@@ -89,6 +90,16 @@ def main():
                 )
             except Exception as e:
                 logging.error(f"Error processing group {prefix}: {e}")
+
+    # using the generated tiles, generate embeddings
+
+    generate_embeddings(
+        source_folder=tile_output_dir,
+        batch_size=64,
+        return_reconstruction=False,
+        return_reconstruction_error=False,
+        device=None,
+    )
 
 
 if __name__ == "__main__":
