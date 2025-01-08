@@ -33,10 +33,11 @@ A Python library for processing multi-channel TIFF images, creating tiles, and g
 ## Usage
 
 Basic usage to process images and generate embeddings:
-- Download model from hugging face using this command :
-  ```
-   git clone https://huggingface.co/temsis/Cell-Painting-VAE
-  ```
+Download model from hugging face using this command :
+```
+ git clone https://huggingface.co/temsis/Cell-Painting-VAE
+```
+Place model in generate/weights folder
 ```bash
 python main.py -d sample_images
 ```
